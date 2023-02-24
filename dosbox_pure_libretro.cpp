@@ -1679,6 +1679,20 @@ struct DBP_MenuState
 	}
 };
 
+static void DBP_ExitProgram(Program **make)
+{
+    static struct Exit *ex;
+
+    struct Exit : Program {
+        virtual void Run()
+        {
+            first_shell->exit = true;
+        }
+    };
+
+    *make = ex = new Exit;
+}
+
 static void DBP_PureMenuProgram(Program** make)
 {
 	static struct Menu* menu;
@@ -1710,8 +1724,9 @@ static void DBP_PureMenuProgram(Program** make)
 					break;
 				}
 				case 2:
-					memcpy(line, "@Z:PUREMENU", 11);
-					memcpy(line+11, " -FINISH\n", 10);
+                                        // was PUREMENU -FINISH
+					memcpy(line, "@Z:EXITDBP\n", 11);
+					//memcpy(line+11, " -FINISH\n", 10);
 					delete this;
 					break;
 			}
@@ -3756,6 +3771,7 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 	}
 	dbp_boot_time = time_cb();
 	control->Init();
+        PROGRAMS_MakeFile("EXITDBP.COM", DBP_ExitProgram);
 	PROGRAMS_MakeFile("PUREMENU.COM", DBP_PureMenuProgram);
 	PROGRAMS_MakeFile("LABEL.COM", DBP_PureLabelProgram);
 	PROGRAMS_MakeFile("REMOUNT.COM", DBP_PureRemountProgram);
@@ -3935,7 +3951,8 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 		autoexec->ExecuteDestroy();
 		if (!force_start_menu && path && (!strcasecmp(path_ext, "EXE") || !strcasecmp(path_ext, "COM") || !strcasecmp(path_ext, "BAT")))
 		{
-			(((((static_cast<Section_line*>(autoexec)->data += '@') += ((path_ext[0]|0x20) == 'b' ? "call " : "")) += path_file) += '\n') += "@Z:PUREMENU") += " -FINISH\n";
+                    // was PUREMENU -FINISH but in this version we want to just exit
+			(((((static_cast<Section_line*>(autoexec)->data += '@') += ((path_ext[0]|0x20) == 'b' ? "call " : "")) += path_file) += '\n') += "@Z:EXITDBP\n");
 		}
 		else if (!force_start_menu && Drives['C'-'A'] && Drives['C'-'A']->FileExists("DOSBOX.BAT"))
 		{
