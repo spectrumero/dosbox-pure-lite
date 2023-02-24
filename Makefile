@@ -148,7 +148,7 @@ else ifneq ($(findstring Haiku,$(shell uname -s)),)
     CXX   ?= g++
   endif
 else
-  OUTNAME := dosbox_pure_libretro.so
+  OUTNAME := libdosbox_pure_libretro.so
   CXX     ?= g++
   LDFLAGS := -Wl,--gc-sections -fno-ident
   COMMONFLAGS += -pthread
