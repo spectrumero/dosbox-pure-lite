@@ -1830,7 +1830,8 @@ static void DBP_PureMenuProgram(Program** make)
 
 				// Create a new empty hard disk image of the requested size
 				memoryDrive* memDrv = new memoryDrive();
-				DBP_SetDriveLabelFromContentPath(memDrv, path.c_str(), 'C', filename, path.c_str() + path.size() - 3);
+                                const char *pathstr = path.c_str();
+				DBP_SetDriveLabelFromContentPath(memDrv, pathstr, 'C', pathstr, pathstr + strlen(pathstr) - 3);
 				imageDisk* memDsk = new imageDisk(memDrv, (Bit32u)(info*8));
 				Bit32u heads, cyl, sect, sectSize;
 				memDsk->Get_Geometry(&heads, &cyl, &sect, &sectSize);
