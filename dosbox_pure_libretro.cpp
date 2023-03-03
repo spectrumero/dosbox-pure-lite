@@ -3748,28 +3748,7 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 	DOSBOX_Init();
 	check_variables(true);
 	Section* autoexec = control->GetSection("autoexec");
-	if (dosboxconf)
-	{
-		std::string line; Section* section = NULL; std::string::size_type loc;
-		for (std::istringstream in(*dosboxconf); std::getline(in, line);)
-		{
-			trim(line);
-			switch (line.size() ? line[0] : 0)
-			{
-				case '%': case '\0': case '#': case ' ': case '\r': case '\n': continue;
-				case '[':
-					if ((loc = line.find(']')) == std::string::npos) continue;
-					if (Section* sec = control->GetSection(line.erase(loc).erase(0, 1))) section = sec;
-					continue;
-				default:
-					if (!section || !section->HandleInputline(line)) continue;
-					if (section == autoexec) autoexec = NULL; // skip our default autoexec
-					if ((loc = line.find('=')) == std::string::npos) continue;
-					trim(line.erase(loc));
-					if (Property* p = section->GetProp(line)) p->OnChangedByConfigProgram();
-			}
-		}
-	}
+
 	dbp_boot_time = time_cb();
 	control->Init();
         PROGRAMS_MakeFile("EXITDBP.COM", DBP_ExitProgram);
