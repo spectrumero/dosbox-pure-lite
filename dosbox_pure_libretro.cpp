@@ -3829,7 +3829,7 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 		else
 		{
 			// Boot into puremenu, it will take care of further auto start options
-			((static_cast<Section_line*>(autoexec)->data += "@Z:PUREMENU") += (force_start_menu ? "" : " -BOOT")) += '\n';
+			((static_cast<Section_line*>(autoexec)->data += '@') += "COMMAND.COM") += '\n';
 		}
 		autoexec->ExecuteInit();
 
