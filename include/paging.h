@@ -37,8 +37,8 @@ class PageDirectory;
 #define XMS_START		(0x110)
 
 #if defined(USE_FULL_TLB)
-//#define TLB_SIZE		(1024*1024)
-#define TLB_SIZE                65536
+#define TLB_SIZE		(1024*1024)
+//#define TLB_SIZE                65536
 #else
 #define TLB_SIZE		65536	// This must a power of 2 and greater then LINK_START
 #define BANK_SHIFT		28
