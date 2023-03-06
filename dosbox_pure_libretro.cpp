@@ -2519,7 +2519,17 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 		dbp_content_path = path;
 		dbp_content_name = std::string(path_file, path_namelen);
 	}
+        printf("path = %s\n", path);
 
+        DOS_Drive *union_underlay = DBP_Mount(0, false, 0, path);
+        if(union_underlay) {
+            Drives['C'-'A'] = union_underlay;
+        }
+
+        // this below creates a save file, some day we might want this but for
+        // now we don't want the memory drive/resources used up by writing
+        // zip files.
+#if 0
 	dbp_legacy_save = false;
 	std::string save_file = DBP_GetSaveFile(SFT_GAMESAVE); // this can set dbp_legacy_save to true, needed by DBP_Mount
 	DOS_Drive* union_underlay = (path ? DBP_Mount(0, false, 0, path) : NULL);
@@ -2535,6 +2545,7 @@ static bool init_dosbox(const char* path, bool firsttime, std::string* dosboxcon
 		Drives['C'-'A'] = uni;
 		mem_writeb(Real2Phys(dos.tables.mediaid) + ('C'-'A') * 9, uni->GetMediaByte());
 	}
+#endif
 
 	// A reboot can happen during the first frame if puremenu wants to change DOSBox machine config at which point we cannot request input_state yet (RetroArch would crash)
 	bool force_start_menu = (dbp_biosreboot ? true : (!input_state_cb ? false : (
