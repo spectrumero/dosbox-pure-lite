@@ -126,7 +126,6 @@ static std::vector<Bit8u> dbp_custom_mapping;
 static DBP_Port_Device dbp_port_devices[DBP_MAX_PORTS];
 static bool dbp_input_binds_modified;
 static bool dbp_bind_unused;
-static bool dbp_on_screen_keyboard;
 static bool dbp_mouse_input;
 static bool dbp_optionsupdatecallback;
 static bool dbp_last_hideadvanced;
@@ -1941,11 +1940,6 @@ static void refresh_input_binds(bool set_controller_info = false, unsigned refre
 			dbp_input_binds.back().port = port;
 		}
 
-		if (dbp_on_screen_keyboard && port == 0)
-		{
-			dbp_input_binds.push_back({ port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3, "On Screen Keyboard", DBPET_ONSCREENKEYBOARD });
-		}
-
 		if (mapping)
 			continue;
 
@@ -2488,12 +2482,10 @@ static bool check_variables(bool is_startup = false)
 	Bit16s bind_mousewheel = (wkey1 > KBD_NONE && wkey1 < KBD_LAST && wkey2 > KBD_NONE && wkey2 < KBD_LAST ? DBP_MAPPAIR_MAKE(wkey1, wkey2) : 0);
 
 	bool bind_unused = (retro_get_variable("dosbox_pure_bind_unused", "true")[0] != 'f');
-	bool on_screen_keyboard = (retro_get_variable("dosbox_pure_on_screen_keyboard", "true")[0] != 'f');
 	bool mouse_input = (retro_get_variable("dosbox_pure_mouse_input", "true")[0] != 'f');
-	if (bind_unused != dbp_bind_unused || on_screen_keyboard != dbp_on_screen_keyboard || mouse_input != dbp_mouse_input || bind_mousewheel != dbp_bind_mousewheel)
+	if (bind_unused != dbp_bind_unused || mouse_input != dbp_mouse_input || bind_mousewheel != dbp_bind_mousewheel)
 	{
 		dbp_bind_unused = bind_unused;
-		dbp_on_screen_keyboard = on_screen_keyboard;
 		dbp_mouse_input = mouse_input;
 		dbp_bind_mousewheel = bind_mousewheel;
 		if (dbp_state > DBPSTATE_SHUTDOWN) refresh_input_binds();

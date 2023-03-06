@@ -149,14 +149,6 @@ static retro_core_option_v2_definition option_defs[] =
 		"true"
 	},
 	{
-		"dosbox_pure_on_screen_keyboard",
-		"Enable On Screen Keyboard", NULL,
-		"Enable the On Screen Keyboard feature which can be activated with the L3 button on the controller.", NULL,
-		"Input",
-		{ { "true", "On" }, { "false", "Off" } },
-		"true"
-	},
-	{
 		"dosbox_pure_mouse_wheel",
 		"Bind Mouse Wheel To Key", NULL,
 		"Bind mouse wheel up and down to two keyboard keys to be able to use it in DOS games.", NULL,
