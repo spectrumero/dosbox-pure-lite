@@ -408,13 +408,13 @@ static retro_core_option_v2_definition option_defs[] =
 		"Video",
 		{
 			{ "0",  "512KB" },
-			{ "1", "1MB" },
-			{ "2", "2MB (default)" },
+			{ "1", "1MB (default)" },
+			{ "2", "2MB" },
 			{ "3", "3MB" },
 			{ "4", "4MB" },
 			{ "8", "8MB (not always recognized)" },
 		},
-		"2"
+		"1"
 	},
 	{
 		"dosbox_pure_voodoo",
@@ -461,8 +461,8 @@ static retro_core_option_v2_definition option_defs[] =
 		{
 			{ "none", "Disable extended memory (no EMS/XMS)" },
 			{ "4",  "4 MB" },
-			{ "8",  "8 MB" },
-			{ "16", "16 MB (default)" },
+			{ "8",  "8 MB (default)" },
+			{ "16", "16 MB" },
 			{ "24", "24 MB" },
 			{ "32", "32 MB" },
 			{ "48", "48 MB" },
@@ -471,7 +471,7 @@ static retro_core_option_v2_definition option_defs[] =
 			{ "128", "128 MB" },
 			{ "224", "224 MB" },
 		},
-		"16"
+		"8"
 	},
 	{
 		"dosbox_pure_cpu_type",
