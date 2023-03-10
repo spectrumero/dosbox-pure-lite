@@ -1180,6 +1180,7 @@ void DBP_MidiDelay(Bit32u ms)
 
 bool DBP_IsKeyDown(KBD_KEYS key)
 {
+        printf("IsKeyDown: %d = %d\n", key, dbp_keys_down[key]);
 	return (dbp_keys_down[key] != 0);
 }
 
@@ -2676,12 +2677,16 @@ void retro_init(void) //#3
 			// This can be called from another thread. Hopefully we can get away without a mutex in DBP_QueueEvent.
 			int val = dbp_keymap_retro2dos[keycode];
 			if (!val) return;
-			if (down && !dbp_keys_down[val])
+
+                        // TODO / FIXME: Removing the state check so that input replay
+                        // works. The input stuff might need a rework to work how we
+                        // want it to.
+			if (down /*&& !dbp_keys_down[val]*/)
 			{
 				dbp_keys_down[val] |= DBP_DOWN_BY_KEYBOARD;
 				DBP_QueueEvent(DBPET_KEYDOWN, val);
 			}
-			else if (!down && (dbp_keys_down[val] & DBP_DOWN_BY_KEYBOARD))
+			else if (!down /*&& (dbp_keys_down[val] & DBP_DOWN_BY_KEYBOARD)*/)
 			{
 				dbp_keys_down[val] = 1;
 				DBP_QueueEvent(DBPET_KEYUP, val);
@@ -3249,6 +3254,7 @@ void retro_run(void)
 
 static bool retro_serialize_all(DBPArchive& ar, bool unlock_thread)
 {
+        ar.flags |= DBPArchive::FLAG_NORESETINPUT;
 	if (dbp_serializemode == DBPSERIALIZE_DISABLED) return false;
 	bool pauseThread = (dbp_state != DBPSTATE_BOOT && dbp_state != DBPSTATE_SHUTDOWN);
 	if (pauseThread) DBP_ThreadControl(TCM_PAUSE_FRAME);
