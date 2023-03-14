@@ -97,6 +97,7 @@ struct GFGus {
 	Bit8u irq1;
 	Bit8u irq2;
 
+        bool configured;
 	bool running;
 	bool dacenabled;
 	bool irqenabled;
@@ -811,11 +812,13 @@ private:
 	MixerObject MixerChan;
 public:
 	GUS(Section* configuration):Module_base(configuration){
+		memset(&myGUS,0,sizeof(myGUS));
 		if(!IS_EGAVGA_ARCH) return;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("gus")) return;
-	
-		memset(&myGUS,0,sizeof(myGUS));
+
+                printf("*****Setting up gus\n");	
+                myGUS.configured = true;
 		GUSRam = new Bit8u[GUSRAM_SIZE];
 		memset(GUSRam,0,GUSRAM_SIZE);
 	
@@ -922,6 +925,7 @@ DBP_SERIALIZE_SET_POINTER_LIST(DMA_CallBack, GUS, GUS_DMA_Callback);
 
 void DBPSerialize_GUS(DBPArchive& ar_outer)
 {
+        if(!myGUS.configured) return;   // only serialize if we have it
 	DBPArchiveOptional ar(ar_outer, gus_chan);
 	if (ar.IsSkip()) return;
 
