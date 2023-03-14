@@ -73,10 +73,12 @@ void DBPArchive::DoExceptionList(void* p, size_t sz, size_t num_exceptions, ...)
 
 #if !defined(__SSE2__) && (_M_IX86_FP == 2 || (defined(_M_AMD64) || defined(_M_X64)))
 #define __SSE2__ 1
+#warning defined SSE2
 #endif
 
 #if defined(__SSE2__) && __SSE2__
 #include <emmintrin.h>
+#warning Using SSE2 sparse type
 #define DBP_SERIALIZE_SPARSE_TYPE __m128i
 #define DBP_SERIALIZE_SPARSE_INIT() __m128i m128izero = _mm_setzero_si128()
 #define DBP_SERIALIZE_SPARSE_TEST(x) (_mm_movemask_epi8(_mm_cmpeq_epi32(_mm_load_si128(x), m128izero)) != 0xFFFF)
@@ -87,6 +89,7 @@ void DBPArchive::DoExceptionList(void* p, size_t sz, size_t num_exceptions, ...)
 //#define DBP_SERIALIZE_SPARSE_INIT() uint32x4_t a; uint32x2_t b
 //#define DBP_SERIALIZE_SPARSE_TEST(x) (a = vld1q_u32((uint32_t*)(x)), b = vorr_u32(vget_low_u32(a), vget_high_u32(a)), vget_lane_u32(vpmax_u32(b, b), 0))
 #else
+#warning Using Bit64u sparse type
 #define DBP_SERIALIZE_SPARSE_TYPE Bit64u
 #define DBP_SERIALIZE_SPARSE_INIT()
 #define DBP_SERIALIZE_SPARSE_TEST(x) *(x)
