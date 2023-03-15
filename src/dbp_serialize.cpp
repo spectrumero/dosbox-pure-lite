@@ -351,7 +351,7 @@ void DBPSerialize_All(DBPArchive& ar, bool dos_running, bool game_running)
 		if (ar.had_error) return;
 		size_t off = ar.GetOffset(), offcheck = off;
 		ar << off;
-		//printf("%s: %d\n", func_name, (int)(off - old_off));
+		printf("ln=%d: %d\n", ln, (int)(off - old_off));
 		if (ar.mode == DBPArchive::MODE_LOAD && off != offcheck)
 		{
 			ar.had_error = DBPArchive::ERR_LAYOUT;
