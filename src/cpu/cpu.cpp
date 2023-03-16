@@ -2711,3 +2711,12 @@ const char* DBP_CPU_GetDecoderName()
 	if (cpudecoder == DBPSerializeCPU_DecoderPtrPagingPtrs[0]) return "PageFault";
 	return "???";
 }
+
+#if C_DYNAMIC_X86
+#warning Using C_DYNAMIC_X86
+#elif C_DYNREC
+#warning Using C_DYNREC
+#else
+#warning Not using DYNREC or DYNAMIC_X86
+#endif
+
