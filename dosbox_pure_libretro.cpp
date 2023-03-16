@@ -3329,6 +3329,15 @@ bool retro_serialize(void *data, size_t size)
 	return true;
 }
 
+size_t retro_serialize_ext(void *data, size_t size)
+{
+	DBPArchiveWriter ar(data, size);
+        Bit8u *start = ar.ptr;
+	if (!retro_serialize_all(ar, true) && ((ar.had_error != DBPArchive::ERR_DOSNOTRUNNING && ar.had_error != DBPArchive::ERR_GAMENOTRUNNING) || dbp_serializemode != DBPSERIALIZE_REWIND)) return 0;
+
+        return ar.ptr - start;
+}
+
 bool retro_unserialize(const void *data, size_t size)
 {
 	DBPArchiveReader ar(data, size);

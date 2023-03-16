@@ -3856,6 +3856,11 @@ RETRO_API size_t retro_serialize_size(void);
 /* Serializes internal state. If failed, or size is lower than
  * retro_serialize_size(), it should return false, true otherwise. */
 RETRO_API bool retro_serialize(void *data, size_t size);
+
+/* Serializes internal state. If failed, or size is lower than
+ * retro_serialize_size(), it should return 0, otherwise the number of
+ * bytes actually serialised. */
+RETRO_API size_t retro_serialize_ext(void *data, size_t size);
 RETRO_API bool retro_unserialize(const void *data, size_t size);
 
 RETRO_API void retro_cheat_reset(void);
