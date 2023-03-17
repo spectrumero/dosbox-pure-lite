@@ -3335,7 +3335,10 @@ size_t retro_serialize_ext(void *data, size_t size)
         Bit8u *start = ar.ptr;
 	if (!retro_serialize_all(ar, true) && ((ar.had_error != DBPArchive::ERR_DOSNOTRUNNING && ar.had_error != DBPArchive::ERR_GAMENOTRUNNING) || dbp_serializemode != DBPSERIALIZE_REWIND)) return 0;
 
-        return ar.ptr - start;
+        int pad = ar.end - ar.ptr > 32 ? 32 : ar.end - ar.ptr;
+        memset(ar.ptr, 0, pad);
+        printf("pad was %d\n", pad);
+        return (ar.ptr - start) + pad;
 }
 
 bool retro_unserialize(const void *data, size_t size)
