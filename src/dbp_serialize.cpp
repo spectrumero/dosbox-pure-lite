@@ -348,12 +348,20 @@ void DBPSerialize_All(DBPArchive& ar, bool dos_running, bool game_running)
 		}
 		size_t old_off = ar.GetOffset();
 		func(ar);
-		if (ar.had_error) return;
+		if (ar.had_error) {
+                    printf("ar.had_error while processing ln=%d\n", ln);
+                    return;
+                }
+                else {
+                    printf("ln %d OK\n", ln);
+                }
 		size_t off = ar.GetOffset(), offcheck = off;
 		ar << off;
 		//printf("%s: %d\n", func_name, (int)(off - old_off));
+                printf("off=%d offcheck=%d equal=%s\n", off, offcheck, off == offcheck ? "true" : "false");
 		if (ar.mode == DBPArchive::MODE_LOAD && off != offcheck)
 		{
+                        printf("Offset error while handling ln %d.\n", ln, off, offcheck);
 			ar.had_error = DBPArchive::ERR_LAYOUT;
 			return;
 		}
