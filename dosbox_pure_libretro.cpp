@@ -2940,6 +2940,7 @@ void retro_reset(void)
 void retro_run(void)
 {
 	#ifdef DBP_ENABLE_FPS_COUNTERS
+#warning Enabled FPS counters
 	DBP_FPSCOUNT(dbp_fpscount_retro)
 	uint32_t curTick = DBP_GetTicks();
 	if (curTick - dbp_lastfpstick >= 1000)
