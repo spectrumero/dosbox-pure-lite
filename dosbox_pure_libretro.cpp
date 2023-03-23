@@ -42,6 +42,13 @@
 #include <sstream>
 #include <chrono>
 
+#ifdef DUMP_AUDIO
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
 #define DBP_DEFAULT_SAMPLERATE 44100.0
@@ -3215,6 +3222,22 @@ void retro_run(void)
 	// submit audio
 	//log_cb(RETRO_LOG_INFO, "[retro_run] Submit %d samples (remain %f) - Had: %d - Left: %d\n", mixSamples, dbp_audio_remain, haveSamples, DBP_MIXER_DoneSamplesCount());
 	if (mixSamples) audio_batch_cb(dbp_audio, mixSamples);
+#ifdef DUMP_AUDIO
+#warning DUMP_AUDIO enabled
+        int fd = open("audio.raw", O_CREAT | O_APPEND | O_WRONLY, 0644);
+        if(fd) {
+            size_t bufsz = mixSamples * 4;
+            size_t bytes = write(fd, (uint8_t *)dbp_audio, bufsz);
+            if(bytes != bufsz) {
+                log_cb(RETRO_LOG_ERROR, "writing samples: tried to write %d but wrote %d",
+                        mixSamples, bytes);
+            }
+            close(fd);
+        }
+        else {
+            log_cb(RETRO_LOG_ERROR, "Failed to open audio.raw"); 
+        }
+#endif
 
 	if (tpfActual)
 	{
