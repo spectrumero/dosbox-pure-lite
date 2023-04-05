@@ -610,6 +610,7 @@ private:
 };
 
 //Used to load drive images and archives from the native filesystem not a DOS_Drive
+#if 0
 struct rawFile : public DOS_File
 {
 	FILE* f;
@@ -622,6 +623,113 @@ struct rawFile : public DOS_File
 	virtual bool Seek64(Bit64u* pos, Bit32u type) { fseek_wrap(f, *pos, type); *pos = (Bit64u)ftell_wrap(f); return open; }
 	Bit16u GetInformation(void) { return 0; }
 };
+#else
+#include <sys/mman.h>
+#include <stdint.h>
+struct rawFile : public DOS_File
+{
+    uint8_t *f;
+    uint8_t *fptr;
+    struct stat st;
+    FILE *stream;
+
+    rawFile(FILE *_f, bool writable) {
+        stream = _f;
+        int fd = fileno(_f);
+        open = true;
+        if(writable) flags |= OPEN_READWRITE;
+
+        if(fstat(fd, &st) < 0) {
+            perror("fstat");
+        }
+        else {
+            f = (uint8_t *)mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+            fptr = f;
+            //printf("DEBUG: mmap'd %lu bytes at %llx\n", st.st_size, f);
+
+            if(f == MAP_FAILED) {
+                perror("mmaping file");
+            }
+        }
+    }
+
+    ~rawFile() {
+        //printf("DEBUG: rawFile destructor (f = %llx)\n", f);
+        if(msync(f, st.st_size, MS_SYNC) == -1) {
+            perror("writing out image: msync");
+        }
+        munmap(f, st.st_size);
+        if(stream) fclose(stream);
+    }
+
+    virtual bool Close() {
+        //printf("DEBUG: Close: refCtr = %d\n", refCtr);
+        if(refCtr == 1) open = false;
+        return true;
+    }
+
+    virtual bool Read(Bit8u *data, Bit16u *size) {
+        //printf("DEBUG: Read - size=%d\n", *size);
+        memcpy(data, fptr, *size);
+        fptr += *size;
+        return open;
+    }
+
+    virtual bool Write(Bit8u *data, Bit16u *size) {
+        //printf("DEBUG: write - size=%d\n", *size);
+        if(!OPEN_IS_WRITING(flags)) return false;
+        memcpy(fptr, data, *size);
+        fptr += *size;
+        return open;
+    }
+
+    virtual bool Seek(Bit32u *pos, Bit32u type) {
+        int offset = 0;
+        switch(type) {
+            case SEEK_SET:
+                offset = *pos;
+                break;
+            case SEEK_CUR:
+                offset = (fptr - f) + *pos;
+                break;
+            case SEEK_END:
+                offset = st.st_size + *pos;
+                break;
+            default:
+                printf("DEBUG: Arrrgh! Invalid seek\n");
+        }
+        //printf("DEBUG: Seek, pos = %d type = %d offset now = %d\n", *pos, type, offset);
+        fptr = f + offset;
+        *pos = offset;
+        return open;
+    }
+
+    virtual bool Seek64(Bit64u *pos, Bit32u type) {
+        int64_t offset = 0;
+        switch(type) {
+            case SEEK_SET:
+                offset = *pos;
+                break;
+            case SEEK_CUR:
+                offset = (fptr - f) + *pos;
+                break;
+            case SEEK_END:
+                offset = st.st_size + *pos;
+                break;
+            default:
+                printf("DEBUG: Arrrgh! Invalid Seek64\n");
+        }
+        //printf("DEBUG: Seek64, pos = %d type = %d offset now = %d\n", *pos, type, offset);
+        fptr = f + offset;
+        *pos = offset;
+        return open;
+    }
+
+    Bit16u GetInformation(void) { return 0; }
+};
+
+#endif
+
 
 class memoryDrive : public DOS_Drive {
 public:
