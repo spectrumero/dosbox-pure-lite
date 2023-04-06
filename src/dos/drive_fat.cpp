@@ -309,17 +309,21 @@ Bit32u fatDrive::getClusterValue(Bit32u clustNum) {
 
 	switch(fattype) {
 		case FAT12:
-			fatoffset = clustNum + (clustNum / 2);
+			fatoffset = clustNum + (clustNum >> 1);
 			break;
 		case FAT16:
-			fatoffset = clustNum * 2;
+			fatoffset = clustNum << 1;
 			break;
 		case FAT32:
-			fatoffset = clustNum * 4;
+			fatoffset = clustNum << 2;
 			break;
 	}
-	fatsectnum = bootbuffer.reservedsectors + (fatoffset / bootbuffer.bytespersector) + partSectOff;
-	fatentoff = fatoffset % bootbuffer.bytespersector;
+
+        // experimental: hard code this to 512 bytes per sector and take some shortcuts
+//	fatsectnum = bootbuffer.reservedsectors + (fatoffset / bootbuffer.bytespersector) + partSectOff;
+        fatsectnum = bootbuffer.reservedsectors + (fatoffset >> 9) + partSectOff;
+//	fatentoff = fatoffset % bootbuffer.bytespersector;
+        fatentoff = fatoffset & 0x1FF;
 
 	if(curFatSect != fatsectnum) {
 		/* Load two sectors at once for FAT12 */
@@ -585,7 +589,8 @@ Bit32u fatDrive::getAbsoluteSectFromChain(Bit32u startClustNum, Bit32u logicalSe
 		--skipClust;
 	}
 
-	return (getClustFirstSect(currentClust) + sectClust);
+        Bit32u rc = (getClustFirstSect(currentClust) + sectClust);
+        return rc;
 }
 
 void fatDrive::deleteClustChain(Bit32u startCluster, Bit32u bytePos) {
