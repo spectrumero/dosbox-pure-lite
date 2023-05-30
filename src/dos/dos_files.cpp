@@ -395,10 +395,8 @@ bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount,bool fcb) {
 	}
 */
 	Bit16u toread=*amount;
-        printf("before: CPU_Cycles=%d\n", CPU_Cycles);
 	bool ret=Files[handle]->Read(data,&toread);
 	*amount=toread;
-        printf("after : CPU_Cycles=%d\n", CPU_Cycles);
 	return ret;
 }
 

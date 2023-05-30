@@ -53,6 +53,7 @@
 #include <time.h>
 #include <signal.h>
 extern Bit32s CPU_Cycles;
+Bit32u TMR_brake = 0;
 
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
@@ -2412,6 +2413,17 @@ static bool check_variables(bool is_startup = false)
 
 	const char* cycles = retro_get_variable("dosbox_pure_cycles", "auto");
 	bool cycles_numeric = (cycles[0] >= '0' && cycles[0] <= '9');
+
+        //--- TIMING
+        const char *brake = retro_get_variable("dosbox_pure_brake_cycles", "off");
+        if(brake[0] >= '0' && brake[0] <= '9') {
+            TMR_brake = atoi(brake);
+            printf("Frame overtime brake set to %d cycles\n", TMR_brake);
+        }
+        else {
+            printf("Not setting brake (brake=%s)\n", brake);
+        }
+        //---
 	Variables::RetroVisibility("dosbox_pure_cycles_scale", cycles_numeric);
 	Variables::RetroVisibility("dosbox_pure_cycle_limit", !cycles_numeric);
 	if (cycles_numeric)
@@ -3505,7 +3517,10 @@ void TMR_notify(union sigval sv) {
     printf("-------- timer expired ----------- cyc max=%d\n", CPU_CycleMax);
 //			semDidPause.Post();
     CPU_CycleLeft=0;
-    CPU_CycleMax=12000;
+    if(TMR_brake > 0) {
+        CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
+        printf("braking: CPU_CycleMax = %d\n", CPU_CycleMax);
+    }
 }
 
 void TMR_remaining() {
