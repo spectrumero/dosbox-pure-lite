@@ -473,6 +473,7 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 bool PIC_RunQueue(void) {
 	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
+        //printf("CPU_CycleLeft=%d\n", CPU_CycleLeft);
 	CPU_Cycles=0;
 	if (CPU_CycleLeft<=0) {
 		return false;

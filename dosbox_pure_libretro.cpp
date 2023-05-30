@@ -52,6 +52,7 @@
 // TIMER debug
 #include <time.h>
 #include <signal.h>
+extern Bit32s CPU_Cycles;
 
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
@@ -3483,7 +3484,7 @@ void TMR_start_timer() {
     interval.it_interval.tv_sec = 0;
     interval.it_interval.tv_nsec = 0;
     interval.it_value.tv_sec = 0;
-    interval.it_value.tv_nsec = 16000000;
+    interval.it_value.tv_nsec = 15000000;
 
     rc=timer_settime(timerid, 0, &interval, NULL);
     if(rc < 0) {
@@ -3501,8 +3502,10 @@ void TMR_stop_timer() {
 }
 
 void TMR_notify(union sigval sv) {
-    printf("-------- timer expired -----------\n");
+    printf("-------- timer expired ----------- cyc max=%d\n", CPU_CycleMax);
 //			semDidPause.Post();
+    CPU_CycleLeft=0;
+    CPU_CycleMax=12000;
 }
 
 void TMR_remaining() {
