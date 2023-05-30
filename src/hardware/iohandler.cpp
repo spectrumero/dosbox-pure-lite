@@ -220,8 +220,10 @@ inline void IO_USEC_write_delay_old() {
 }
 
 
-#define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
-#define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
+//#define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
+//#define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
+#define IODELAY_READ_MICROSk (Bit32u)(128/1.0)
+#define IODELAY_WRITE_MICROSk (Bit32u)(128/0.75)
 
 inline void IO_USEC_read_delay() {
 	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;

@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -29,7 +28,7 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
-
+extern Bit32s CPU_Cycles;
 #define DOS_FILESTART 4
 
 #define FCB_SUCCESS     0
@@ -396,8 +395,10 @@ bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount,bool fcb) {
 	}
 */
 	Bit16u toread=*amount;
+        printf("before: CPU_Cycles=%d\n", CPU_Cycles);
 	bool ret=Files[handle]->Read(data,&toread);
 	*amount=toread;
+        printf("after : CPU_Cycles=%d\n", CPU_Cycles);
 	return ret;
 }
 

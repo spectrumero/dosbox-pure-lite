@@ -49,6 +49,10 @@
 #include <fcntl.h>
 #endif
 
+// TIMER debug
+#include <time.h>
+#include <signal.h>
+
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
 #define DBP_DEFAULT_SAMPLERATE 44100.0
@@ -94,6 +98,12 @@ static std::vector<std::string> dbp_osimages;
 static StringToPointerHashMap<void> dbp_vdisk_filter;
 static unsigned dbp_disk_image_index;
 static bool dbp_legacy_save;
+
+// TIMER debugging
+void TMR_notify(union sigval sv);
+void TMR_start_timer();
+void TMR_stop_timer();
+void TMR_remaining();
 
 // DOSBOX INPUT
 struct DBP_InputBind
@@ -437,6 +447,7 @@ static void DBP_ThreadControl(DBP_ThreadCtlMode m)
 			{ retro_time_t t = time_cb(); semDidPause.Wait(); dbp_wait_finish += (Bit32u)(time_cb() - t); }
 			#else
 			semDidPause.Wait();
+                        //TMR_remaining();
 			#endif
 			DBP_ASSERT(!dbp_paused_midframe);
 			dbp_frame_pending = false;
@@ -2946,6 +2957,7 @@ void retro_reset(void)
 
 void retro_run(void)
 {
+    TMR_start_timer();
 	#ifdef DBP_ENABLE_FPS_COUNTERS
 #warning Enabled FPS counters
 	DBP_FPSCOUNT(dbp_fpscount_retro)
@@ -3160,14 +3172,17 @@ void retro_run(void)
 			DBP_ThreadControl(skip_emulate ? TCM_PAUSE_FRAME : TCM_FINISH_FRAME);
 			break;
 		case DBP_LATENCY_LOW:
+                        printf("latency_low: skip_emulate=%d\n", skip_emulate);
 			if (skip_emulate) break;
 			if (!dbp_frame_pending) DBP_ThreadControl(TCM_NEXT_FRAME);
 			DBP_ThreadControl(TCM_FINISH_FRAME);
 			break;
 		case DBP_LATENCY_VARIABLE:
+                        printf("latency_variable\n");
 			dbp_lastrun = time_cb();
 			break;
 	}
+        //TMR_remaining();
 
 	Bit32u tpfActual = 0, tpfTarget = 0, tpfDraws = 0;
 	#ifdef DBP_ENABLE_WAITSTATS
@@ -3274,6 +3289,7 @@ void retro_run(void)
 
 	// submit video
 	video_cb(buf.video, buf.width, buf.height, buf.width * 4);
+        TMR_stop_timer();
 }
 
 static bool retro_serialize_all(DBPArchive& ar, bool unlock_thread)
@@ -3442,3 +3458,62 @@ bool fpath_nocase(char* path)
 		base_dir = subdir.append(path).c_str();
 	}
 }
+
+///-----------------------------------------
+///
+static timer_t timerid;
+static bool tmr_init = false;
+
+void TMR_start_timer() {
+    int rc;
+    struct sigevent sevp;
+    struct itimerspec interval;
+
+    sevp.sigev_notify = SIGEV_THREAD;
+    sevp.sigev_notify_function = TMR_notify;
+    sevp.sigev_notify_attributes = NULL;
+    sevp.sigev_value.sival_ptr = NULL;
+
+    rc=timer_create(CLOCK_REALTIME, &sevp, &timerid);
+    if(rc < 0) {
+        perror("timer_create");
+        return;
+    }
+
+    interval.it_interval.tv_sec = 0;
+    interval.it_interval.tv_nsec = 0;
+    interval.it_value.tv_sec = 0;
+    interval.it_value.tv_nsec = 16000000;
+
+    rc=timer_settime(timerid, 0, &interval, NULL);
+    if(rc < 0) {
+        perror("timer_settime");
+        return;
+    }
+    tmr_init=true;
+}
+
+void TMR_stop_timer() {
+    if(timer_delete(timerid) < 0) {
+        perror("timer_delete");
+    }
+    tmr_init = false;
+}
+
+void TMR_notify(union sigval sv) {
+    printf("-------- timer expired -----------\n");
+//			semDidPause.Post();
+}
+
+void TMR_remaining() {
+    struct itimerspec tv;
+    if(!tmr_init) return;
+
+    if(timer_gettime(timerid, &tv) < 0) {
+        perror("timer_gettime");
+        return;
+    }
+    
+    printf("remaining: %ld ms\n", tv.it_value.tv_nsec / 1000000);
+}
+
