@@ -54,6 +54,7 @@
 #include <signal.h>
 extern Bit32s CPU_Cycles;
 Bit32u TMR_brake = 0;
+Bit32u TMR_usec = 0;
 
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
@@ -2415,6 +2416,9 @@ static bool check_variables(bool is_startup = false)
 	bool cycles_numeric = (cycles[0] >= '0' && cycles[0] <= '9');
 
         //--- TIMING
+        const char *brake_us = retro_get_variable("dosbox_pure_brake_usec", "16000");
+        TMR_usec = atoi(brake_us);
+
         const char *brake = retro_get_variable("dosbox_pure_brake_cycles", "off");
         if(brake[0] >= '0' && brake[0] <= '9') {
             TMR_brake = atoi(brake);
@@ -2422,8 +2426,13 @@ static bool check_variables(bool is_startup = false)
         }
         else {
             printf("Not setting brake (brake=%s)\n", brake);
+
+            // Disable the timer
+            TMR_usec = 0;
         }
+        printf("Brake usec = %d%s\n", TMR_usec, TMR_usec == 0 ? " (disabled)" : "");
         //---
+
 	Variables::RetroVisibility("dosbox_pure_cycles_scale", cycles_numeric);
 	Variables::RetroVisibility("dosbox_pure_cycle_limit", !cycles_numeric);
 	if (cycles_numeric)
@@ -3477,7 +3486,11 @@ bool fpath_nocase(char* path)
 static timer_t timerid;
 static bool tmr_init = false;
 
+// retro_run deadline timer
 void TMR_start_timer() {
+    // Disabled?
+    if(TMR_usec == 0) return;
+
     int rc;
     struct sigevent sevp;
     struct itimerspec interval;
@@ -3496,7 +3509,7 @@ void TMR_start_timer() {
     interval.it_interval.tv_sec = 0;
     interval.it_interval.tv_nsec = 0;
     interval.it_value.tv_sec = 0;
-    interval.it_value.tv_nsec = 15000000;
+    interval.it_value.tv_nsec = TMR_usec * 1000;
 
     rc=timer_settime(timerid, 0, &interval, NULL);
     if(rc < 0) {
@@ -3507,6 +3520,9 @@ void TMR_start_timer() {
 }
 
 void TMR_stop_timer() {
+    // Disabled?
+    if(TMR_usec == 0) return;
+
     if(timer_delete(timerid) < 0) {
         perror("timer_delete");
     }

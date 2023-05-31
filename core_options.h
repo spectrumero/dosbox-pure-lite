@@ -328,6 +328,19 @@ static retro_core_option_v2_definition option_defs[] =
 		"off"
 	},
 	{
+		"dosbox_pure_brake_usec",
+		"Emulated Performance", NULL,
+		"Number of microseconds that retro_run can be running before the brake is applieed." "\n\n", NULL, //end of Performance section
+		"Performance",
+		{
+			{ "16000",     "16,000 usec (default)" },
+			{ "10000",     "10,000 usec" },
+			{ "5000",      "5,000 usec" },
+                        { "0",         "Disabled" },
+		},
+		"16000"
+	},
+	{
 		"dosbox_pure_cycles_scale",
 		"Detailed > Performance Scale", NULL,
 		"Fine tune the emulated performance for specific needs." "\n\n", NULL, //end of Performance > Detailed section
