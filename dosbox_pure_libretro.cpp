@@ -2977,9 +2977,8 @@ void retro_reset(void)
 	init_dosbox((dbp_content_path.empty() ? NULL : dbp_content_path.c_str()), false);
 }
 
-void retro_run(void)
+static void retro_run_impl(void)
 {
-    TMR_start_timer();
 	#ifdef DBP_ENABLE_FPS_COUNTERS
 #warning Enabled FPS counters
 	DBP_FPSCOUNT(dbp_fpscount_retro)
@@ -3194,13 +3193,11 @@ void retro_run(void)
 			DBP_ThreadControl(skip_emulate ? TCM_PAUSE_FRAME : TCM_FINISH_FRAME);
 			break;
 		case DBP_LATENCY_LOW:
-                        printf("latency_low: skip_emulate=%d\n", skip_emulate);
 			if (skip_emulate) break;
 			if (!dbp_frame_pending) DBP_ThreadControl(TCM_NEXT_FRAME);
 			DBP_ThreadControl(TCM_FINISH_FRAME);
 			break;
 		case DBP_LATENCY_VARIABLE:
-                        printf("latency_variable\n");
 			dbp_lastrun = time_cb();
 			break;
 	}
@@ -3311,7 +3308,13 @@ void retro_run(void)
 
 	// submit video
 	video_cb(buf.video, buf.width, buf.height, buf.width * 4);
-        TMR_stop_timer();
+}
+
+void retro_run(void) 
+{
+    TMR_start_timer();
+    retro_run_impl();
+    TMR_stop_timer();
 }
 
 static bool retro_serialize_all(DBPArchive& ar, bool unlock_thread)
@@ -3530,12 +3533,12 @@ void TMR_stop_timer() {
 }
 
 void TMR_notify(union sigval sv) {
-    printf("-------- timer expired ----------- cyc max=%d\n", CPU_CycleMax);
 //			semDidPause.Post();
     CPU_CycleLeft=0;
     if(TMR_brake > 0) {
+        Bit32u old_cyclemax = CPU_CycleMax;
         CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
-        printf("braking: CPU_CycleMax = %d\n", CPU_CycleMax);
+        printf("braking: CPU_Cycles = %d, CPU_CycleMax = %d now %d\n", CPU_Cycles, old_cyclemax, CPU_CycleMax);
     }
 }
 
