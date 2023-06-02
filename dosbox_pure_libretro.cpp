@@ -1466,9 +1466,16 @@ static bool GFX_Events_AdvanceFrame()
 			if (CPU_CycleMax > (Bit64s)recentEmulator * 280) CPU_CycleMax = (Bit32s)(recentEmulator * 280);
 		}
 
-		//log_cb(RETRO_LOG_INFO, "[DBPTIMERS%4d] - EMU: %5d - FE: %5d - SRLZ: %u - TARGET: %5d - EffectiveCycles: %6d - Limit: %6d|%6d - CycleMax: %6d - Scale: %5d\n",
-		//	St.HistoryCursor, (int)recentEmulator, (int)((recentFrameSum / recentCount) - recentEmulator), st, frameTime, 
-		//	recentCyclesSum / recentCount, CPU_CYCLES_LOWER_LIMIT, recentEmulator * 280, CPU_CycleMax, ratio);
+		log_cb(RETRO_LOG_INFO, "[DBPTIMERS%4d] - EMU: %5d - FE: %5d - TARGET: %5d - EffectiveCycles: %6d - Limit: %6d|%6d - CycleMax: %6d - Scale: %5d\n",
+			St.HistoryCursor,                                       // [DBPTIMERS%4d]
+                        (int)recentEmulator,                                    // EMU
+                        (int)((recentFrameSum / recentCount) - recentEmulator), // FE
+                        frameTime,                                              // TARGET
+			recentCyclesSum / recentCount,                          // EffectiveCycles
+                        CPU_CYCLES_LOWER_LIMIT,                                 // Limit: %6d
+                        recentEmulator * 280,                                   // Limit RHS
+                        CPU_CycleMax,                                           // CycleMax
+                        ratio);                                                 // Scale
 	}
 	return true;
 }
@@ -3534,11 +3541,12 @@ void TMR_stop_timer() {
 
 void TMR_notify(union sigval sv) {
 //			semDidPause.Post();
-    CPU_CycleLeft=0;
     if(TMR_brake > 0) {
-        Bit32u old_cyclemax = CPU_CycleMax;
+        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d", 
+                CPU_Cycles, CPU_CycleLeft, CPU_CycleMax);
+        CPU_CycleLeft=0;
         CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
-        printf("braking: CPU_Cycles = %d, CPU_CycleMax = %d now %d\n", CPU_Cycles, old_cyclemax, CPU_CycleMax);
+        printf(" now %d\n", CPU_CycleMax);
     }
 }
 
