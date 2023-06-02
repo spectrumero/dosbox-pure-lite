@@ -3542,11 +3542,11 @@ void TMR_stop_timer() {
 void TMR_notify(union sigval sv) {
 //			semDidPause.Post();
     if(TMR_brake > 0) {
-        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d", 
-                CPU_Cycles, CPU_CycleLeft, CPU_CycleMax);
+        Bit32s old_CycleMax = CPU_CycleMax;
         CPU_CycleLeft=0;
         CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
-        printf(" now %d\n", CPU_CycleMax);
+        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d now %d", 
+                CPU_Cycles, CPU_CycleLeft, CPU_CycleMax, old_CycleMax);
     }
 }
 
