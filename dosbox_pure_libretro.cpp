@@ -1432,7 +1432,7 @@ static bool GFX_Events_AdvanceFrame()
 
 			// scale ratio we are aiming for (1024 is no change)
 			ratio = frameTime * 1024 * 100 / 100 / recentEmulator;
-			ratio = (Bit32s)((double)ratio * ratio_not_removed);
+			//ratio = (Bit32s)((double)ratio * ratio_not_removed);
 
 			// Don't allow very high ratio which can cause us to lock as we don't scale down
 			// for very low ratios. High ratio might result because of timing resolution
@@ -3540,12 +3540,11 @@ void TMR_stop_timer() {
 }
 
 void TMR_notify(union sigval sv) {
-//			semDidPause.Post();
     if(TMR_brake > 0) {
         Bit32s old_CycleMax = CPU_CycleMax;
         CPU_CycleLeft=0;
         CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
-        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d now %d", 
+        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d was %d", 
                 CPU_Cycles, CPU_CycleLeft, CPU_CycleMax, old_CycleMax);
     }
 }
