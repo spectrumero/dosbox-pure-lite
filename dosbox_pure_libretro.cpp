@@ -3598,6 +3598,7 @@ void TMR_setup_brake()
         TMR_brake = true;
         TMR_usec = atoi(brake_us);
     }
+    printf("got brake setup\n");
 
     if(TMR_brake) {
         const char *low_brake = retro_get_variable("dosbox_pure_brake_cycles_low", "3000");
@@ -3618,5 +3619,6 @@ void TMR_setup_brake()
             printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
         }
     }
+    printf("done brake setup\n");
 }
 
