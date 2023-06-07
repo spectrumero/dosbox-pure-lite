@@ -307,12 +307,11 @@ static retro_core_option_v2_definition option_defs[] =
 		"auto"
 	},
 	{
-		"dosbox_pure_brake_cycles",
+		"dosbox_pure_brake_cycles_low",
 		"Emulated Performance", NULL,
-		"The cycle value that will be applied if a frame overruns its allotted time." "\n\n", NULL, //end of Performance section
+		"The lowest cycle value that will be applied if a frame overruns its allotted time." "\n\n", NULL, //end of Performance section
 		"Performance",
 		{
-			{ "off",     "No brake (default)" },
 			{ "315",     "8086/8088, 4.77 MHz from 1980 (315 cps)" },
 			{ "1320",    "286, 6 MHz from 1982 (1320 cps)" },
 			{ "2750",    "286, 12.5 MHz from 1985 (2750 cps)" },
@@ -325,7 +324,28 @@ static retro_core_option_v2_definition option_defs[] =
 			{ "500000",  "Pentium III, 600 MHz from 1999 (500000 cps)" },
 			{ "1000000", "AMD Athlon, 1.2 GHz from 2000 (1000000 cps)" },
 		},
-		"off"
+		"3000"
+	},
+	{
+		"dosbox_pure_brake_cycles_high",
+		"Emulated Performance", NULL,
+		"The highest cycle value that will be applied if a frame overruns its allotted time." "\n\n", NULL, //end of Performance section
+		"Performance",
+		{
+                        { "auto",    "Based on recent performance" },
+			{ "315",     "8086/8088, 4.77 MHz from 1980 (315 cps)" },
+			{ "1320",    "286, 6 MHz from 1982 (1320 cps)" },
+			{ "2750",    "286, 12.5 MHz from 1985 (2750 cps)" },
+			{ "4720",    "386, 20 MHz from 1987 (4720 cps)" },
+			{ "7800",    "386DX, 33 MHz from 1989 (7800 cps)" },
+			{ "13400",   "486DX, 33 MHz from 1990 (13400 cps)" },
+			{ "26800",   "486DX2, 66 MHz from 1992 (26800 cps)" },
+			{ "77000",   "Pentium, 100 MHz from 1995 (77000 cps)" },
+			{ "200000",  "Pentium II, 300 MHz from 1997 (200000 cps)" },
+			{ "500000",  "Pentium III, 600 MHz from 1999 (500000 cps)" },
+			{ "1000000", "AMD Athlon, 1.2 GHz from 2000 (1000000 cps)" },
+		},
+		"auto"
 	},
 	{
 		"dosbox_pure_brake_usec",
@@ -336,7 +356,7 @@ static retro_core_option_v2_definition option_defs[] =
 			{ "16000",     "16,000 usec (default)" },
 			{ "10000",     "10,000 usec" },
 			{ "5000",      "5,000 usec" },
-                        { "0",         "Disabled" },
+                        { "off",       "Disabled" },
 		},
 		"16000"
 	},

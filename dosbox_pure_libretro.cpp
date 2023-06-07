@@ -49,12 +49,22 @@
 #include <fcntl.h>
 #endif
 
-// TIMER debug
+// Frame overshoot
 #include <time.h>
 #include <signal.h>
 extern Bit32s CPU_Cycles;
-Bit32u TMR_brake = 0;
+bool   TMR_brake = false;
 Bit32u TMR_usec = 0;
+static Bit64u TMR_minBrakeCycles = 3000;
+static Bit64u TMR_maxBrakeCycles = 3000;
+static bool   TMR_maxBrakeAuto = true;
+
+static Bit64u TMR_frame_avg_acc = 3000;
+static Bit32u TMR_frame_count;
+static Bit64u TMR_frame_avg = 3000;
+
+static void TMR_setup_brake();
+// End frame overshoot
 
 // RETROARCH AUDIO/VIDEO
 #ifdef GEKKO // From RetroArch/config.def.h
@@ -102,7 +112,7 @@ static StringToPointerHashMap<void> dbp_vdisk_filter;
 static unsigned dbp_disk_image_index;
 static bool dbp_legacy_save;
 
-// TIMER debugging
+// Frame overshoot timer
 void TMR_notify(union sigval sv);
 void TMR_start_timer();
 void TMR_stop_timer();
@@ -2422,23 +2432,8 @@ static bool check_variables(bool is_startup = false)
 	const char* cycles = retro_get_variable("dosbox_pure_cycles", "auto");
 	bool cycles_numeric = (cycles[0] >= '0' && cycles[0] <= '9');
 
-        //--- TIMING
-        const char *brake_us = retro_get_variable("dosbox_pure_brake_usec", "16000");
-        TMR_usec = atoi(brake_us);
-
-        const char *brake = retro_get_variable("dosbox_pure_brake_cycles", "off");
-        if(brake[0] >= '0' && brake[0] <= '9') {
-            TMR_brake = atoi(brake);
-            printf("Frame overtime brake set to %d cycles\n", TMR_brake);
-        }
-        else {
-            printf("Not setting brake (brake=%s)\n", brake);
-
-            // Disable the timer
-            TMR_usec = 0;
-        }
-        printf("Brake usec = %d%s\n", TMR_usec, TMR_usec == 0 ? " (disabled)" : "");
-        //---
+        //--- Frame overshoot timers
+        TMR_setup_brake();
 
 	Variables::RetroVisibility("dosbox_pure_cycles_scale", cycles_numeric);
 	Variables::RetroVisibility("dosbox_pure_cycle_limit", !cycles_numeric);
@@ -3319,6 +3314,15 @@ static void retro_run_impl(void)
 
 void retro_run(void) 
 {
+    // calculate the average cycle max for 32 frames
+    TMR_frame_avg_acc += CPU_CycleMax;
+    TMR_frame_count++;
+    if(TMR_frame_count == 32) {
+        TMR_frame_avg = TMR_frame_avg_acc >> 5;
+        TMR_frame_avg_acc = 0;
+        TMR_frame_count = 0;
+    }
+
     TMR_start_timer();
     retro_run_impl();
     TMR_stop_timer();
@@ -3542,10 +3546,34 @@ void TMR_stop_timer() {
 void TMR_notify(union sigval sv) {
     if(TMR_brake > 0) {
         Bit32s old_CycleMax = CPU_CycleMax;
+
+        // CPU_Cycles counts down to zero, large values here are bad, it means
+        // we missed by a lot.
+        float ratio = (float)(CPU_CycleMax - CPU_Cycles) / (float)CPU_CycleMax;
+
+        // Automatic cycle ceiling?
+        // Take half of the average recent CPU_CycleMax values, or half of
+        // current CPU_CycleMax, whichever is lower. The floor will be
+        // min brake cycles.
+        if(TMR_maxBrakeAuto) {
+            TMR_maxBrakeCycles = TMR_frame_avg >> 1;
+            else if(TMR_maxBrakeCycles > old_CycleMax)
+                TMR_maxBrakeCycles = old_CycleMax >> 1;
+
+            if(TMR_maxBrakeCycles < TMR_minBrakeCycles) 
+                TMR_maxBrakeCycles = TMR_minBrakeCycles;
+        }
+
+        // Guess at a cycle value that will allow us to catch up on the next
+        // frame.
+        Bit64u adj = (TMR_maxBrakeCycles - TMR_minBrakeCycles) * ratio;
+
+        CPU_CycleMax = TMR_minBrakeCycles + adj;
         CPU_CycleLeft=0;
-        CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
-        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax = %d was %d", 
-                CPU_Cycles, CPU_CycleLeft, CPU_CycleMax, old_CycleMax);
+        //CPU_CycleMax = CPU_CycleMax > TMR_brake ? TMR_brake : CPU_CycleMax;
+
+        log_cb(RETRO_LOG_WARN, "braking: CPU_Cycles = %d, CPU_CycleLeft = %d, CPU_CycleMax now %d was %d, ratio = %f, cycle avg = %d", 
+                CPU_Cycles, CPU_CycleLeft, CPU_CycleMax, old_CycleMax, ratio, TMR_frame_avg);
     }
 }
 
@@ -3559,5 +3587,35 @@ void TMR_remaining() {
     }
     
     printf("remaining: %ld ms\n", tv.it_value.tv_nsec / 1000000);
+}
+
+// Get brake setup info from configuration
+void TMR_setup_brake()
+{
+    const char *brake_us = retro_get_variable("dosbox_pure_brake_usec", "off");
+    if(brake_us[0] >= '0' && brake_us[0] <= '9') {
+        TMR_brake = true;
+        TMR_usec = atoi(brake_us);
+    }
+
+    if(TMR_brake) {
+        const char *low_brake = retro_get_variable("dosbox_pure_brake_cycles_low", "3000");
+        const char *high_brake = retro_get_variable("dosbox_pure_brake_cycles_high", "auto");
+        TMR_minBrakeCycles = atoi(low_brake);
+
+        if(high_brake[0] >= '0' && high_brake[0] <= '9') {
+            TMR_maxBrakeCycles = atoi(high_brake);
+            TMR_maxBrakeAuto = false;
+        }
+
+        if(TMR_maxBrakeCycles < TMR_minBrakeCycles) {
+            TMR_brake = false;
+            log_cb(RETRO_LOG_WARN, "braking: Max brake cycles set below min brake cycles (min=%d, max=%d)\n",
+                    TMR_minBrakeCycles, TMR_maxBrakeCycles);
+        }
+        else {
+            printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
+        }
+    }
 }
 
