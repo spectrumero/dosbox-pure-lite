@@ -361,6 +361,19 @@ static retro_core_option_v2_definition option_defs[] =
 		"16000"
 	},
 	{
+		"dosbox_pure_brake_min_ratio",
+		"Emulated Performance", NULL,
+		"Minimum ratio of uncomplete to completed cycles before brake kicks in" "\n\n", NULL, //end of Performance section
+		"Performance",
+		{
+			{ "1.0",     "1:1" },
+			{ "0.95",    "0.95 (default)" },
+			{ "0.9",     "0.9" },
+                        { "0.85",    "0.85" },
+		},
+		"0.95"
+	},
+	{
 		"dosbox_pure_cycles_scale",
 		"Detailed > Performance Scale", NULL,
 		"Fine tune the emulated performance for specific needs." "\n\n", NULL, //end of Performance > Detailed section

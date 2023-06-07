@@ -62,6 +62,7 @@ static bool   TMR_maxBrakeAuto = true;
 static Bit64u TMR_frame_avg_acc = 3000;
 static Bit32u TMR_frame_count;
 static Bit64u TMR_frame_avg = 3000;
+static float  TMR_min_ratio = 0.95f;
 
 static void TMR_setup_brake();
 // End frame overshoot
@@ -3550,6 +3551,7 @@ void TMR_notify(union sigval sv) {
         // CPU_Cycles counts down to zero, large values here are bad, it means
         // we missed by a lot.
         float ratio = (float)(CPU_CycleMax - CPU_Cycles) / (float)CPU_CycleMax;
+        if(ratio >= TMR_min_ratio) return;
 
         // Automatic cycle ceiling?
         // Take half of the average recent CPU_CycleMax values, or half of
@@ -3601,7 +3603,16 @@ void TMR_setup_brake()
     if(TMR_brake) {
         const char *low_brake = retro_get_variable("dosbox_pure_brake_cycles_low", "3000");
         const char *high_brake = retro_get_variable("dosbox_pure_brake_cycles_high", "auto");
+        const char *min_brake_ratio = retro_get_variable("dosbox_pure_brake_min_ratio", "0.95");
         TMR_minBrakeCycles = atoi(low_brake);
+        TMR_min_ratio = atof(min_brake_ratio);
+
+        // throw out nonsensical values
+        if(TMR_min_ratio < 0.1f || TMR_min_ratio > 1.0f) {
+            TMR_min_ratio = 0.95f;
+            log_cb(RETRO_LOG_WARN, "Nonsensical brake minimum ratio specified, setting to 0.95");
+        }
+        
 
         if(high_brake[0] >= '0' && high_brake[0] <= '9') {
             TMR_maxBrakeCycles = atoi(high_brake);
@@ -3609,9 +3620,10 @@ void TMR_setup_brake()
         }
 
         if(TMR_maxBrakeCycles < TMR_minBrakeCycles) {
-            TMR_brake = false;
-            log_cb(RETRO_LOG_WARN, "braking: Max brake cycles set below min brake cycles (min=%d, max=%d)\n",
+            log_cb(RETRO_LOG_WARN, "braking: Max brake cycles set below min brake cycles (min=%d, max=%d), using auto instead\n",
                     TMR_minBrakeCycles, TMR_maxBrakeCycles);
+            TMR_maxBrakeAuto = true;
+            TMR_maxBrakeCycles = TMR_minBrakeCycles;
         }
 
         if(TMR_maxBrakeAuto) 
