@@ -3620,7 +3620,7 @@ void TMR_setup_brake()
         }
         else {
             printf("done sanity check\n");
-            printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
+            //printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
         }
     }
     printf("done brake setup\n");
