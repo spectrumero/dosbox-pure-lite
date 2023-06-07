@@ -3592,6 +3592,7 @@ void TMR_remaining() {
 // Get brake setup info from configuration
 void TMR_setup_brake()
 {
+    printf("entering TMR_setup_brake\n");
     const char *brake_us = retro_get_variable("dosbox_pure_brake_usec", "off");
     if(brake_us[0] >= '0' && brake_us[0] <= '9') {
         TMR_brake = true;
