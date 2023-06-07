@@ -3592,37 +3592,34 @@ void TMR_remaining() {
 // Get brake setup info from configuration
 void TMR_setup_brake()
 {
-    printf("entering TMR_setup_brake\n");
     const char *brake_us = retro_get_variable("dosbox_pure_brake_usec", "off");
     if(brake_us[0] >= '0' && brake_us[0] <= '9') {
         TMR_brake = true;
         TMR_usec = atoi(brake_us);
     }
-    printf("got brake setup\n");
 
     if(TMR_brake) {
         const char *low_brake = retro_get_variable("dosbox_pure_brake_cycles_low", "3000");
         const char *high_brake = retro_get_variable("dosbox_pure_brake_cycles_high", "auto");
         TMR_minBrakeCycles = atoi(low_brake);
-        printf("got config\n");
 
         if(high_brake[0] >= '0' && high_brake[0] <= '9') {
             TMR_maxBrakeCycles = atoi(high_brake);
             TMR_maxBrakeAuto = false;
         }
 
-        printf("done high brake\n");
-
         if(TMR_maxBrakeCycles < TMR_minBrakeCycles) {
             TMR_brake = false;
             log_cb(RETRO_LOG_WARN, "braking: Max brake cycles set below min brake cycles (min=%d, max=%d)\n",
                     TMR_minBrakeCycles, TMR_maxBrakeCycles);
         }
-        else {
-            printf("done sanity check\n");
-            //printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
-        }
+
+        if(TMR_maxBrakeAuto) 
+            log_cb(RETRO_LOG_INFO, "Brake set at %d usec, low cycles = %d high cycles set to auto", 
+                    TMR_usec, TMR_minBrakeCycles);
+        else
+            log_cb(RETRO_LOG_INFO, "Brake set at %d usec, low cycles = %d high cycles = %d", 
+                    TMR_usec, TMR_minBrakeCycles, TMR_maxBrakeCycles);
     }
-    printf("done brake setup\n");
 }
 
