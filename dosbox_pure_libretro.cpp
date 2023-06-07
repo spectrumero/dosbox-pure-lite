@@ -3557,7 +3557,7 @@ void TMR_notify(union sigval sv) {
         // min brake cycles.
         if(TMR_maxBrakeAuto) {
             TMR_maxBrakeCycles = TMR_frame_avg >> 1;
-            else if(TMR_maxBrakeCycles > old_CycleMax)
+            if(TMR_maxBrakeCycles > old_CycleMax)
                 TMR_maxBrakeCycles = old_CycleMax >> 1;
 
             if(TMR_maxBrakeCycles < TMR_minBrakeCycles) 
