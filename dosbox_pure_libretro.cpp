@@ -3544,7 +3544,7 @@ void TMR_stop_timer() {
 }
 
 void TMR_notify(union sigval sv) {
-    if(TMR_brake > 0) {
+    if(TMR_brake) {
         Bit32s old_CycleMax = CPU_CycleMax;
 
         // CPU_Cycles counts down to zero, large values here are bad, it means
@@ -3604,11 +3604,14 @@ void TMR_setup_brake()
         const char *low_brake = retro_get_variable("dosbox_pure_brake_cycles_low", "3000");
         const char *high_brake = retro_get_variable("dosbox_pure_brake_cycles_high", "auto");
         TMR_minBrakeCycles = atoi(low_brake);
+        printf("got config\n");
 
         if(high_brake[0] >= '0' && high_brake[0] <= '9') {
             TMR_maxBrakeCycles = atoi(high_brake);
             TMR_maxBrakeAuto = false;
         }
+
+        printf("done high brake\n");
 
         if(TMR_maxBrakeCycles < TMR_minBrakeCycles) {
             TMR_brake = false;
@@ -3616,6 +3619,7 @@ void TMR_setup_brake()
                     TMR_minBrakeCycles, TMR_maxBrakeCycles);
         }
         else {
+            printf("done sanity check\n");
             printf("min brake = %d, max brake = %s\n", TMR_minBrakeCycles, TMR_maxBrakeAuto ? "auto" : high_brake);
         }
     }
